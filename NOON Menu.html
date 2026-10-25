@@ -1,0 +1,812 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>NOON Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   테마 토큰 — 종이 메뉴판에서 뽑은 색
+   ============================================================ */
+:root {
+  --navy:   #1e1a4b;   /* 메뉴판 남색 */
+  --cream:  #f2ede1;   /* 일러스트 선 색 */
+  --paper:  #f6f4ee;   /* 메뉴 페이지 배경 */
+  --ink:    #16143a;   /* 본문 글자 */
+  --ink-2:  #6a6788;   /* 보조 글자 */
+  --line:   #d8d4c6;   /* 구분선 */
+
+  --font-en: "Poppins", "Futura", "Century Gothic", system-ui, sans-serif;
+  --font-ko: "Noto Sans KR", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  --max: 760px;
+  --hero-scroll: 280vh;   /* 히어로 연출에 쓰는 스크롤 길이 (길수록 천천히) */
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ko);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   1. 히어로
+   ============================================================ */
+.hero {
+  position: relative;
+  height: var(--hero-scroll);
+  /* 사파리 하단 툴바가 접혔다 펴질 때 고정 무대 아래로 틈이 보이는 것을 막는
+     2차 안전장치. 틈이 생겨도 남색이라 눈에 띄지 않음 */
+  background: var(--navy);
+  /* JS 가 갱신하는 진행도 (0~1). 기본값은 애니메이션 시작 상태 */
+  --pour: 0; --splash: 0; --tip: 1; --zoom: 1; --wash: 0; --end: 0; --copy: 1; --cue: 1;
+}
+
+.hero__stage {
+  position: sticky;
+  top: 0;
+  /* svh 는 툴바가 펼쳐졌을 때의 높이라, 툴바가 접히면 아래에 흰 띠가 생긴다.
+     lvh(툴바가 접힌 최대 높이)로 잡아 항상 화면을 덮게 한다. */
+  height: 100svh;
+  height: 100lvh;
+  overflow: hidden;
+  background: var(--navy);
+  display: grid;
+  place-items: center;
+}
+
+/* ---- SVG 일러스트 ---- */
+.art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 줌인 : 음료 줄기를 중심으로 확대 */
+#zoom {
+  transform-box: view-box;
+  transform-origin: 396px 300px;
+  transform: scale(var(--zoom));
+  will-change: transform;
+}
+
+/* 포스터 선화 (크림색 면으로 그려짐) */
+.art .ink { fill: var(--cream); fill-rule: evenodd; }
+
+/* 줄기 : 클립 사각형의 아랫변이 화면 위 → 잔 입구까지 내려옴 */
+#pourRect, #pourTip {
+  transform-box: view-box;
+  transform: translateY(calc(-650px + var(--pour) * 590px));
+}
+#pourTip { opacity: var(--tip); }
+
+/* 잔에 이는 물결 */
+#splash { opacity: var(--splash); }
+
+/* ---- 화면을 덮는 크림색 ---- */
+.hero__wash {
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+  opacity: var(--wash);
+  pointer-events: none;
+}
+
+/* ---- 가게 이름 ---- */
+.hero__copy {
+  position: relative;
+  text-align: center;
+  color: var(--cream);
+  padding: 0 24px;
+  margin-bottom: 46vh;          /* 잔 위쪽에 배치 */
+  opacity: var(--copy);
+  pointer-events: none;
+}
+
+.hero__name {
+  font-family: var(--font-en);
+  font-weight: 700;
+  font-size: clamp(2rem, 9vw, 3rem);
+  letter-spacing: .02em;
+  margin: 0 0 .4em;
+  text-transform: uppercase;
+}
+
+.hero__tagline {
+  margin: 0;
+  font-family: var(--font-en);
+  font-size: clamp(.65rem, 2.8vw, .8rem);
+  letter-spacing: .34em;
+  font-weight: 500;
+  opacity: .8;
+}
+
+/* ---- 크림색 위에 떠오르는 메뉴 타이틀 ---- */
+.hero__end {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 14px;
+  opacity: var(--end);
+  pointer-events: none;
+}
+
+.hero__endName {
+  font-family: var(--font-en);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 7vw, 2.4rem);
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.hero__endLabel {
+  font-family: var(--font-en);
+  font-size: .72rem;
+  letter-spacing: .5em;
+  font-weight: 500;
+  color: var(--ink-2);
+  padding-left: .5em;
+}
+
+.hero__cue {
+  position: absolute;
+  bottom: calc(max(24px, env(safe-area-inset-bottom)) + 56px);
+  left: 50%;
+  translate: -50% 0;
+  color: var(--cream);
+  font-family: var(--font-en);
+  font-size: .62rem;
+  letter-spacing: .42em;
+  padding-left: .42em;
+  opacity: var(--cue);
+  animation: cue 2.4s ease-in-out infinite;
+}
+
+@keyframes cue {
+  0%, 100% { transform: translateY(0);   }
+  50%      { transform: translateY(7px); }
+}
+
+/* 메뉴로 바로 건너뛰기 */
+.hero__skip {
+  position: absolute;
+  top: max(18px, env(safe-area-inset-top));
+  right: 20px;
+  z-index: 2;
+  color: var(--cream);
+  font-family: var(--font-en);
+  font-size: .66rem;
+  letter-spacing: .22em;
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid rgba(242,237,225,.35);
+  border-radius: 999px;
+  opacity: var(--copy);
+}
+.hero__skip:hover { border-color: var(--cream); }
+
+/* ============================================================
+   2. 메뉴
+   ============================================================ */
+.menu {
+  position: relative;
+  z-index: 1;
+  background: var(--paper);
+}
+
+.wrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 26px;
+}
+
+/* ---- 표지 : 종이 메뉴판 1면의 남색 얼룩 ---- */
+.cover {
+  position: relative;
+  height: clamp(190px, 34vh, 300px);
+  margin-bottom: 6px;
+}
+
+.cover__blob {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.cover__inner {
+  position: absolute;
+  left: 50%;
+  bottom: 27%;
+  translate: -50% 0;
+  width: 100%;
+  max-width: var(--max);
+  padding: 0 26px;
+}
+
+.cover__title {
+  margin: 0;
+  font-family: var(--font-en);
+  font-weight: 700;
+  font-size: clamp(2.1rem, 11vw, 3.2rem);
+  letter-spacing: .01em;
+  color: var(--cream);
+}
+
+/* ---- 큰 묶음 (ALIMENTS 등) ---- */
+.group { margin-bottom: 34px; }
+
+.group__head { margin: 0 0 30px; padding-top: 24px; }
+
+.group__title {
+  margin: 0;
+  font-family: var(--font-en);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 9vw, 2.6rem);
+  letter-spacing: .01em;
+  color: var(--navy);
+}
+
+/* ---- 카테고리 ---- */
+.section { margin-bottom: 40px; }
+
+.section__title {
+  font-family: var(--font-en);
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: .04em;
+  color: var(--navy);
+  margin: 0 0 12px;
+}
+
+.section__mark { margin-left: 4px; font-size: .85em; }
+
+.items { list-style: none; margin: 0; padding: 0; }
+
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 5px 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.item.is-in { opacity: 1; transform: none; }
+
+.item__name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-en);
+  font-weight: 400;
+  font-size: .93rem;
+  letter-spacing: .015em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  word-break: keep-all;   /* 한글이 낱자 단위로 끊기지 않게 */
+}
+
+.item__ko {
+  font-family: var(--font-ko);
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: .35em;
+  color: var(--ink);
+}
+
+.item__price {
+  font-family: var(--font-en);
+  font-weight: 400;
+  font-size: .93rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.item__sig { color: var(--navy); margin-left: .3em; }
+
+/* ============================================================
+   3. 푸터
+   ============================================================ */
+.foot__wave {
+  display: block;
+  width: 100%;
+  height: 52px;
+  margin-top: 30px;      /* 여백은 물결 위쪽에 준다 */
+  margin-bottom: -1px;
+}
+
+.foot {
+  position: relative;
+  padding: 46px 0 56px;   /* 물결과 붙어야 하므로 위 여백 없음 */
+  text-align: center;
+  color: var(--cream);
+  background: var(--navy);
+  font-size: .8rem;
+}
+
+.foot__name {
+  font-family: var(--font-en);
+  font-weight: 700;
+  letter-spacing: .06em;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.foot__notice {
+  white-space: pre-line;
+  margin-top: 20px;
+  font-size: .72rem;
+  opacity: .7;
+  letter-spacing: .02em;
+}
+
+.foot a { color: inherit; }
+
+/* ============================================================
+   접근성 : 모션 최소화 설정이면 연출을 끄고 바로 메뉴를 보여줌
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero { height: 100lvh; --pour: 0; --splash: 0; --tip: 0; }  /* 빈 잔 상태로 고정 */
+  #zoom { transform: none; }
+  .hero__cue { animation: none; }
+  .item { opacity: 1; transform: none; transition: none; }
+}
+
+</style>
+
+
+<!-- ============================================================
+     히어로 : 스크롤 연동 애니메이션
+       0.0 ~ 0.04  빈 잔이 손에 들려 있음
+       0.04~ 0.34  위에서 음료 줄기가 내려와 잔에 부딪힘
+       0.44~ 0.80  음료 줄기로 줌인
+       0.70~ 1.00  화면이 크림색으로 덮이고 메뉴가 페이드로 등장
+     JS 가 진행도를 계산해 --pour/--splash/--zoom/--wash 로 넘겨줍니다.
+     ============================================================ -->
+<header class="hero" id="hero">
+  <div class="hero__stage">
+
+    <svg class="art" id="art" viewBox="0 0 800 1300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <clipPath id="pourClip">
+          <rect id="pourRect" x="330" y="-620" width="180" height="1240"/>
+        </clipPath>
+      </defs>
+
+      <g id="zoom">
+        <!-- 손·팔·소매·잔 : 가게 포스터(빈 잔)의 선화를 그대로 옮긴 것 -->
+        <path class="ink" d="M341.0 530.3 380.2 529.8 437.6 533.0 493.3 540.0 514.3 544.0 534.1 549.3 555.6 558.1 564.1 565.3 568.1 573.8 568.4 583.4 569.4 585.1 584.3 587.9 598.4 592.7 610.1 601.9 612.7 605.5 615.3 612.3 616.8 621.3 616.2 625.8 613.6 633.6 607.5 642.1 598.7 648.0 590.4 651.1 573.4 654.1 566.3 654.2 562.6 655.8 552.2 695.6 543.5 718.3 544.2 719.8 546.4 719.9 575.7 702.3 593.4 697.0 603.7 697.0 612.5 698.8 622.4 703.5 626.8 707.4 630.9 713.8 633.5 724.7 633.5 733.0 631.8 740.6 628.1 749.5 622.6 756.5 615.8 763.3 607.5 769.6 606.3 771.7 607.7 773.6 616.6 776.1 624.5 779.8 634.4 789.7 638.2 797.4 639.9 805.1 639.2 814.9 636.6 822.7 632.0 829.7 622.4 837.8 611.0 844.2 604.1 846.7 580.7 851.6 531.8 854.8 517.8 857.6 502.4 863.1 484.0 874.0 476.8 879.3 468.0 888.2 458.3 900.5 454.0 907.7 451.5 914.5 451.9 916.9 454.2 918.7 473.0 924.9 486.2 932.6 492.4 940.1 495.6 950.5 493.6 1118.6 492.5 1125.9 492.5 1173.0 491.5 1180.3 491.5 1231.5 490.4 1258.6 487.7 1261.2 480.8 1261.0 478.9 1257.6 481.0 1070.6 482.1 1063.2 482.1 1003.7 483.1 996.4 483.1 974.4 482.0 970.3 478.0 969.3 454.9 975.5 417.7 980.1 403.2 981.2 341.5 981.2 291.4 977.0 257.5 971.1 229.4 963.2 226.8 964.7 225.0 972.3 225.0 1022.5 224.0 1029.8 224.0 1072.7 222.9 1080.0 219.8 1257.6 219.1 1260.1 217.1 1261.2 209.9 1261.2 207.3 1258.6 208.3 1245.1 208.3 1192.8 209.3 1185.5 210.4 1098.8 211.4 1091.5 211.4 1051.8 212.5 1044.4 212.5 994.3 213.5 987.0 213.5 954.6 214.6 937.9 215.4 934.6 218.8 929.6 228.5 922.5 240.8 918.1 257.3 914.8 260.5 912.7 261.6 908.6 260.5 890.9 256.6 874.8 250.2 859.3 237.5 845.9 225.4 839.2 208.2 832.4 192.8 827.9 175.5 821.2 156.8 811.7 146.6 804.1 139.5 796.5 134.6 786.8 133.1 778.9 133.9 773.6 137.4 763.5 143.5 755.0 150.5 749.4 158.8 745.2 172.3 742.0 178.4 742.0 193.5 744.7 212.2 751.0 230.2 759.0 233.4 757.6 233.1 755.2 223.3 743.1 214.9 730.6 205.0 712.3 192.2 672.8 187.4 635.8 187.4 584.6 188.4 563.7 189.5 559.6 191.6 556.5 198.5 551.9 211.6 546.2 222.9 542.8 247.2 537.9 296.7 531.9 340.1 530.4Z M170.7 753.9 185.1 754.1 219.1 766.1 264.0 787.0 300.6 805.8 326.6 816.4 352.8 822.6 366.5 823.5 378.0 825.6 378.8 827.1 378.0 828.6 355.6 845.9 347.8 852.7 342.6 858.9 338.2 866.9 339.4 870.4 342.4 871.9 346.2 869.9 374.4 844.8 404.4 824.7 427.2 811.9 445.6 804.2 461.4 799.1 484.8 795.3 552.5 792.0 603.2 785.4 611.6 786.4 619.0 790.5 625.4 797.7 627.7 804.8 627.8 808.8 626.7 815.0 624.0 820.6 616.9 828.1 613.1 830.6 598.9 836.3 589.4 838.3 568.2 841.1 534.9 843.3 509.5 848.2 495.0 853.6 487.0 858.1 464.9 874.7 450.0 892.2 444.6 901.4 439.8 913.4 435.1 937.9 433.8 961.7 432.4 964.4 428.9 966.2 405.3 969.7 362.4 970.8 355.1 969.7 335.2 969.7 298.7 966.5 283.7 963.8 275.2 960.8 273.1 955.6 273.0 891.9 271.4 882.1 267.1 868.6 260.4 854.4 254.8 846.4 246.9 838.6 236.8 832.0 216.4 823.1 191.8 815.4 177.6 809.7 160.1 800.1 150.3 791.0 146.6 785.3 145.7 781.0 146.1 773.3 147.7 769.6 151.3 763.9 155.9 760.0 161.8 756.5 169.8 754.1Z M201.0 603.9 232.5 615.8 260.7 623.2 306.1 631.1 348.8 635.3 404.2 636.4 450.1 634.2 477.3 631.1 512.1 625.1 536.2 618.9 549.2 614.1 552.5 614.5 553.6 616.9 553.1 629.5 547.2 668.6 538.8 697.8 529.9 717.1 513.9 740.9 504.5 752.4 492.5 764.4 473.9 778.1 454.2 788.8 428.5 798.6 405.6 803.9 392.7 805.7 362.5 805.6 331.7 800.8 305.7 793.4 285.2 784.6 267.7 772.9 259.5 766.5 239.1 745.0 223.1 721.3 214.2 703.0 205.9 677.9 201.0 654.6 198.9 632.7 198.9 608.7 200.4 604.1Z M201.0 580.9 229.3 591.9 261.6 600.3 314.4 609.1 335.2 611.3 391.7 613.4 404.2 612.3 431.4 612.3 462.7 610.2 486.7 607.0 516.6 601.4 539.5 595.0 551.9 590.2 554.5 591.7 555.1 597.1 554.1 600.2 550.7 603.1 532.9 609.3 511.2 614.8 459.5 622.7 415.7 625.9 369.7 625.9 352.0 624.9 324.9 622.7 293.5 618.5 256.5 611.7 236.7 606.4 210.0 596.5 201.7 592.3 200.0 590.8 198.9 587.7 199.1 583.8 200.4 581.1Z M334.7 540.7 383.3 540.2 447.0 544.5 495.4 551.5 526.6 558.9 548.2 567.6 553.6 571.6 554.0 574.2 547.2 579.7 538.3 583.4 523.9 587.8 505.8 591.7 475.2 596.6 444.9 599.7 379.1 601.9 371.8 600.8 353.0 600.8 308.1 596.6 260.7 588.7 238.8 583.4 221.5 577.7 207.9 571.4 201.6 567.3 200.8 565.8 201.5 564.3 208.9 559.2 225.1 553.4 260.1 546.6 311.3 541.3 333.8 540.9Z M592.8 709.0 607.3 709.1 611.3 710.4 616.8 714.3 620.0 719.4 622.0 726.8 621.4 732.4 618.8 740.2 613.2 749.2 604.5 757.2 563.6 779.0 512.9 782.7 497.3 782.6 494.2 781.5 493.5 779.5 527.7 744.2 549.1 732.1 575.4 714.6 591.9 709.1Z M570.1 597.4 573.4 596.7 590.5 600.5 596.3 603.1 602.0 608.9 605.0 615.3 605.9 623.8 601.7 632.2 594.2 638.2 582.2 642.0 571.3 643.6 567.5 643.5 564.7 642.0 564.2 638.5 566.3 635.4 585.0 632.2 592.3 628.0 594.9 622.2 594.2 614.6 589.7 609.7 584.3 606.8 568.4 602.9 567.4 600.5 569.4 597.8Z M568.0 615.2 571.3 614.5 580.8 616.5 583.7 618.7 582.8 621.7 572.4 623.8 567.7 623.4 565.8 622.3 565.4 620.5 567.3 615.5Z"/>
+        <!-- 소매를 화면 아래끝까지 연장 -->
+        <rect class="ink" x="207.2" y="1256" width="11.5" height="150"/>
+        <rect class="ink" x="478.9" y="1256" width="10.5" height="150"/>
+
+        <!-- 위에서 내려오는 음료 줄기 -->
+        <g clip-path="url(#pourClip)">
+          <rect class="ink" x="366" y="-820" width="59" height="1382"/>
+        </g>
+        <ellipse class="ink" id="pourTip" cx="396" cy="620" rx="29" ry="14"/>
+
+        <!-- 잔에 부딪혀 이는 물결 -->
+        <g id="splash">
+          <path class="ink" d="M365.3 544.7 367.9 543.6 380.3 543.6 386.5 544.8 419.9 545.0 421.8 546.8 422.0 555.3 424.0 565.7 425.7 568.9 430.1 570.8 441.0 570.8 453.9 567.5 474.0 557.9 484.6 554.9 490.0 556.7 492.4 561.7 491.6 566.8 485.9 573.5 485.9 575.7 487.2 576.6 499.8 573.7 512.6 569.3 525.5 566.0 534.1 565.9 538.2 566.8 541.5 568.4 546.4 573.5 547.2 585.0 548.2 586.5 551.3 586.9 559.1 585.0 560.3 585.6 560.6 596.2 558.8 598.0 532.7 605.5 496.8 611.7 484.5 613.0 474.6 613.0 468.4 614.3 448.5 614.3 442.3 615.5 398.9 615.5 392.7 614.3 374.1 614.3 367.9 613.0 358.0 613.0 340.7 610.6 322.2 609.2 281.3 603.0 242.1 595.1 213.8 586.1 203.1 581.2 202.4 578.9 202.4 570.3 203.1 568.0 226.0 577.7 235.0 580.3 237.6 578.2 240.3 571.0 244.7 567.9 251.5 566.0 261.2 566.0 271.8 569.0 292.9 577.7 302.0 580.3 303.3 579.4 303.5 577.1 298.5 568.4 298.0 561.7 300.5 556.7 305.8 554.9 312.4 557.0 334.0 571.4 344.5 575.7 351.7 575.7 356.8 573.4 360.4 569.5 362.7 563.2 364.7 554.0 365.0 545.6Z M367.8 497.6 370.4 496.5 422.0 497.0 422.6 498.1 421.9 502.1 421.4 527.6 418.8 528.7 406.4 528.7 400.2 527.5 367.2 527.0 366.1 524.4 366.1 503.3 367.3 498.3Z"/>
+          <ellipse class="ink" cx="545" cy="524" rx="10" ry="12"/>
+        </g>
+      </g>
+    </svg>
+
+    <!-- 화면을 덮는 크림색 (줌인 끝에서 채워짐) -->
+    <div class="hero__wash"></div>
+
+    <!-- 가게 이름 : 스크롤 시작하면 사라짐 -->
+    <div class="hero__copy">
+      <h1 class="hero__name" id="cafe-name">NOON</h1>
+      <p class="hero__tagline" id="cafe-tagline">BOISSONS · ALIMENTS</p>
+    </div>
+
+    <!-- 크림색 위에 떠오르는 메뉴 타이틀 -->
+    <div class="hero__end">
+      <div class="hero__endName" id="end-name">NOON</div>
+      <div class="hero__endLabel">MENU</div>
+    </div>
+
+    <a class="hero__skip" href="#menu">MENU ↓</a>
+    <div class="hero__cue" aria-hidden="true">SCROLL</div>
+  </div>
+</header>
+
+<!-- ============================================================
+     메뉴 (js/menu-data.js 내용으로 자동 생성)
+     ============================================================ -->
+<main class="menu" id="menu">
+  <div class="cover" id="cover"></div>
+  <div class="wrap" id="menu-root"></div>
+
+  <svg class="foot__wave" viewBox="0 0 400 52" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#1e1a4b" d="M0 30 C60 6 120 44 190 26 C250 10 320 34 400 14 L400 52 L0 52 Z"/>
+  </svg>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot__name" id="foot-name">NOON</div>
+      <div id="foot-address"></div>
+      <div id="foot-hours"></div>
+      <div id="foot-phone"></div>
+      <div><a id="foot-instagram" href="#" target="_blank" rel="noopener"></a></div>
+      <p class="foot__notice" id="foot-notice"></p>
+    </div>
+  </footer>
+</main>
+
+<script>
+/* ============================================================
+   메뉴 데이터 — 사진의 종이 메뉴판을 그대로 옮긴 것.
+   수정은 이 파일만 고치면 됩니다. (HTML/CSS 안 건드려도 됨)
+
+   구조
+     groups[]            큰 묶음 (BOISSONS / ALIMENTS)
+       sections[]        카테고리 (CAFÉ, MATCHA ...)
+         items[]         { fr, ko, price, sig }
+                         fr    불어(또는 영어) 이름 — 대문자로 출력됨
+                         ko    한글 이름 (없으면 "")
+                         price 적은 문자열 그대로 출력 ("5.5 / 6.0" 가능)
+                         sig   true 면 ✱ 표시
+   ============================================================ */
+window.CAFE = {
+  cafe: {
+    name: "NOON",
+    tagline: "BOISSONS · ALIMENTS",
+    address: "",                  // 예: "1234 Rue Saint-Denis, Montréal"
+    hours: "",                    // 예: "TOUS LES JOURS 10:00 – 20:00"
+    phone: "",
+    instagram: ""                 // 예: "@cafe_name"
+  },
+
+  groups: [
+    {
+      title: "BOISSONS",
+      sections: [
+        {
+          title: "CAFÉ",
+          items: [
+            { fr: "Espresso",              ko: "에스프레소",      price: "4.0" },
+            { fr: "Americano",             ko: "아메리카노",      price: "4.0" },
+            { fr: "Allongé",               ko: "알롱제",          price: "4.0" },
+            { fr: "Macchiato",             ko: "마끼야또",        price: "4.5" },
+            { fr: "Cortado",               ko: "콜타도",          price: "5.0" },
+            { fr: "Cappuccino",            ko: "카푸치노",        price: "5.5" },
+            { fr: "Mocha",                 ko: "모카",            price: "6.0" },
+            { fr: "Latte",                 ko: "라떼",            price: "5.5 / 6.0" },
+            { fr: "Latte à la vanille",    ko: "바닐라 라떼",     price: "6.5" },
+            { fr: "Cold brew",             ko: "콜드 브루",       price: "5.0" }
+          ]
+        },
+        {
+          title: "SIGNATURE",
+          mark: "✱",
+          items: [
+            { fr: "Latte Noon",            ko: "라떼 눈",         price: "6.0" },
+            { fr: "Yuzu Americano",        ko: "유자 아메리카노", price: "6.0" },
+            { fr: "Cold brew crème",       ko: "콜드 브루 크림",  price: "6.5" }
+          ]
+        },
+        {
+          title: "MATCHA",
+          items: [
+            { fr: "Koicha",                ko: "코이차",          price: "5.0" },
+            { fr: "Usucha",                ko: "우슈차",          price: "5.0" }
+          ]
+        },
+        {
+          title: "MATCHA AU LAIT",
+          items: [
+            { fr: "Matcha cortado",             ko: "마차 콜타도",              price: "5.5" },
+            { fr: "Latte au matcha",            ko: "마차 라떼",                price: "6.25" },
+            { fr: "Latte Noon au matcha",       ko: "라떼 눈 마차",             price: "6.5" },
+            { fr: "Matcha fraise (glacé)",      ko: "마차 스트로베리 (아이스)", price: "6.75" }
+          ]
+        },
+        {
+          title: "RAFRAÎCHISSEMENT",
+          items: [
+            { fr: "Yuzu matcha",                          ko: "유자 마차",              price: "6.75" },
+            { fr: "Thé vert à la pêche avec limonade",    ko: "피치 그린티 레모네이드", price: "6.75" },
+            { fr: "Lime pétillant (durée limitée)",       ko: "스파클링 라임 (시즌 한정)", price: "6.75" },
+            { fr: "Pamplemousse pétillant",               ko: "스파클링 자몽",          price: "6.75" },
+            { fr: "Poire au miel",                        ko: "삼다꿀배",               price: "6.75" }
+          ]
+        },
+        {
+          title: "AUTRES",
+          items: [
+            { fr: "Thé vert / noir / tisane",  ko: "녹차. 홍차. 허브차",  price: "4.0" },
+            { fr: "Chocolat chaud",            ko: "핫초코",              price: "6.0" },
+            { fr: "Thé au lait royal",         ko: "로얄 밀크티",         price: "6.25" },
+            { fr: "Latte au hojicha",          ko: "호지차 라떼",         price: "6.25" },
+            { fr: "Affogato",                  ko: "아포가토",            price: "7.0" }
+          ]
+        },
+        {
+          title: "EXTRA",
+          items: [
+            { fr: "+ Shot", ko: "샷", price: "1.0" },
+            { fr: "+ Glacé. Sirop maison à la gousse de vanille. Lait végétal",
+              ko: "아이스. 홈메이드 바닐라빈 시럽. 대체 우유", price: "0.5" }
+          ]
+        }
+      ]
+    },
+
+    {
+      title: "ALIMENTS",
+      sections: [
+        {
+          title: "BINGSU",
+          items: [
+            { fr: "Injeolmi",                        ko: "인절미",        price: "14.0" },
+            { fr: "Mangue",                          ko: "망고",          price: "15.0" },
+            { fr: "Tomate au miel avec basilic",     ko: "꿀 바질 토마토", price: "16.0" },
+            { fr: "Tiramisu au matcha",              ko: "마차 티라미수",  price: "17.0" },
+            { fr: "Fraise",                          ko: "딸기",          price: "15.0" },
+            { fr: "Double chocolat",                 ko: "더블 초콜릿",    price: "14.0" }
+          ]
+        },
+        {
+          title: "EXTRA",
+          items: [
+            { fr: "+ Garniture", ko: "토핑", price: "2.0" },
+            { fr: "+ Grande",    ko: "라지", price: "10.0" }
+          ]
+        },
+        {
+          title: "BOUCHÉE",
+          items: [
+            { fr: "Toast matcha banane brûlée", ko: "마차 바나나 브륄레 토스트", price: "8.0" },
+            { fr: "Toast avocat",               ko: "아보카도 토스트",          price: "13.0" },
+            { fr: "Tteokbokki",                 ko: "떡볶이",                   price: "13.0" },
+            { fr: "Buldak tteokbokki",          ko: "불닭 떡볶이",              price: "14.0" },
+            { fr: "Poke",                       ko: "포케",                     price: "23.0" }
+          ]
+        },
+        {
+          title: "CRÈME GLACÉE",
+          items: [
+            { fr: "Matcha",             ko: "마차",         price: "6.0" },
+            { fr: "Vanille",            ko: "바닐라",       price: "6.0" },
+            { fr: "Matcha & vanille",   ko: "마차 & 바닐라", price: "6.0" }
+          ]
+        }
+      ]
+    }
+  ],
+
+  /* ✱ 표시 설명 / 안내 문구 */
+  notice: "✱ SIGNATURE\nMenu and prices are subject to change\n메뉴와 가격은 변동될 수 있습니다"
+};
+
+</script>
+<script>
+/* ============================================================
+   app.js
+     1) 스크롤 → 히어로 연출 진행도 계산
+     2) 메뉴 렌더링
+     3) 등장 애니메이션
+   ============================================================ */
+(function () {
+  "use strict";
+
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* 0~1 사이 구간 진행도 */
+  function seg(p, a, b) {
+    var v = (p - a) / (b - a);
+    return v < 0 ? 0 : v > 1 ? 1 : v;
+  }
+  function easeIn(v)  { return v * v; }
+  function easeOut(v) { return 1 - (1 - v) * (1 - v); }
+
+  /* ---------- 1. 히어로 ---------- */
+  function initHero() {
+    var hero = document.getElementById("hero");
+    var art  = document.getElementById("art");
+    if (!hero) return;
+
+    /* 가로로 넓은 화면에서는 그림 전체가 보이게 */
+    function fitArt() {
+      if (!art) return;
+      var wide = window.innerWidth / window.innerHeight > 0.9;
+      art.setAttribute("preserveAspectRatio", wide ? "xMidYMid meet" : "xMidYMid slice");
+    }
+
+    if (reduceMotion) { fitArt(); return; }
+
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var rect = hero.getBoundingClientRect();
+      var travel = rect.height - window.innerHeight;
+      if (travel <= 0) return;
+
+      var p = -rect.top / travel;
+      p = p < 0 ? 0 : p > 1 ? 1 : p;
+
+      var s = hero.style;
+      /* 음료 줄기가 위에서 내려옴 */
+      s.setProperty("--pour",   easeOut(seg(p, 0.04, 0.34)).toFixed(4));
+      /* 줄기 끝 방울은 잔에 닿으면 사라짐 */
+      s.setProperty("--tip",    (1 - seg(p, 0.24, 0.31)).toFixed(4));
+      /* 잔에 부딪혀 이는 물결 */
+      s.setProperty("--splash", seg(p, 0.25, 0.36).toFixed(4));
+      /* 가게 이름 / 스크롤 안내는 먼저 사라짐 */
+      s.setProperty("--copy",   (1 - seg(p, 0.02, 0.14)).toFixed(4));
+      s.setProperty("--cue",    (1 - seg(p, 0.00, 0.10)).toFixed(4));
+      /* 줄기로 줌인 */
+      s.setProperty("--zoom",   (1 + easeIn(seg(p, 0.44, 0.80)) * 26).toFixed(3));
+      /* 크림색이 화면을 덮고 메뉴 타이틀이 떠오름 */
+      s.setProperty("--wash",   seg(p, 0.70, 0.84).toFixed(4));
+      s.setProperty("--end",    seg(p, 0.82, 0.93).toFixed(4));
+    }
+
+    function onScroll() {
+      if (!ticking) { ticking = true; window.requestAnimationFrame(update); }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", function () { fitArt(); onScroll(); });
+    fitArt();
+    update();
+  }
+
+  /* ---------- 2. 메뉴 렌더링 ---------- */
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  /* 종이 메뉴판 1면의 남색 얼룩 (표지) */
+  function renderCover(title) {
+    var cover = document.getElementById("cover");
+    if (!cover) return;
+
+    var NS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "cover__blob");
+    svg.setAttribute("viewBox", "0 0 400 180");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("aria-hidden", "true");
+    var path = document.createElementNS(NS, "path");
+    path.setAttribute("fill", "#1e1a4b");
+    path.setAttribute("d", "M0 0 H400 V74 C374 80 360 112 326 126 " +
+                           "C292 140 258 130 222 140 C184 151 146 160 110 152 " +
+                           "C72 143 36 124 0 130 Z");
+    svg.appendChild(path);
+
+    var inner = el("div", "cover__inner");
+    inner.appendChild(el("h2", "cover__title", title));
+
+    cover.appendChild(svg);
+    cover.appendChild(inner);
+  }
+
+  function renderMenu(data) {
+    var root = document.getElementById("menu-root");
+    if (!root || !data || !data.groups) return;
+
+    data.groups.forEach(function (group, gi) {
+      var g = el("section", "group");
+
+      /* 첫 묶음의 제목은 표지 얼룩 위에 (종이 1면과 동일) */
+      if (gi === 0) {
+        renderCover(group.title);
+      } else {
+        var head = el("div", "group__head");
+        head.appendChild(el("h2", "group__title", group.title));
+        g.appendChild(head);
+      }
+
+      group.sections.forEach(function (section) {
+        var sec = el("section", "section");
+
+        var t = el("h3", "section__title", section.title);
+        if (section.mark) t.appendChild(el("span", "section__mark", section.mark));
+        sec.appendChild(t);
+
+        var ul = el("ul", "items");
+        section.items.forEach(function (item) {
+          var li = el("li", "item");
+
+          var name = el("div", "item__name", item.fr);
+          if (item.sig) name.appendChild(el("span", "item__sig", "✱"));
+          if (item.ko)  name.appendChild(el("span", "item__ko", item.ko));
+
+          li.appendChild(name);
+          li.appendChild(el("div", "item__price", item.price));
+          ul.appendChild(li);
+        });
+
+        sec.appendChild(ul);
+        g.appendChild(sec);
+      });
+
+      root.appendChild(g);
+    });
+  }
+
+  /* ---------- 3. 가게 정보 ---------- */
+  function renderInfo(data) {
+    var c = data.cafe || {};
+    if (c.name) document.title = c.name + " · MENU";
+
+    var map = {
+      "cafe-name": c.name, "cafe-tagline": c.tagline,
+      "end-name": c.name,  "foot-name": c.name,
+      "foot-address": c.address, "foot-hours": c.hours, "foot-phone": c.phone
+    };
+    Object.keys(map).forEach(function (id) {
+      var node = document.getElementById(id);
+      if (!node) return;
+      if (map[id]) node.textContent = map[id];
+      else if (id.indexOf("foot-") === 0) node.remove();
+    });
+
+    var ig = document.getElementById("foot-instagram");
+    if (ig) {
+      if (c.instagram) {
+        ig.textContent = c.instagram;
+        ig.href = "https://instagram.com/" + c.instagram.replace(/^@/, "");
+      } else if (ig.parentNode) {
+        ig.parentNode.remove();
+      }
+    }
+
+    var notice = document.getElementById("foot-notice");
+    if (notice && data.notice) notice.textContent = data.notice;
+  }
+
+  /* ---------- 4. 메뉴 등장 애니메이션 ---------- */
+  function initReveal() {
+    var items = document.querySelectorAll(".item");
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+      Array.prototype.forEach.call(items, function (i) { i.classList.add("is-in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+      });
+    }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 });
+
+    Array.prototype.forEach.call(items, function (item, i) {
+      item.style.transitionDelay = (Math.min(i % 8, 6) * 40) + "ms";
+      io.observe(item);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var data = window.CAFE;
+    if (data) { renderInfo(data); renderMenu(data); }
+    initHero();
+    initReveal();
+  });
+})();
+
+</script>
+
+</body></html>
