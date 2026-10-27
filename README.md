@@ -1,6 +1,9 @@
 # NOON Menu
 
-카페 NOON 테이블 QR 메뉴판. 빌드 없는 정적 사이트라 어떤 정적 호스팅에도 그대로 올라간다.
+카페 NOON 테이블 QR 메뉴판 — https://cafenoonmenu.com/
+
+GitHub Pages(저장소 Earnmoneywithaclick/noon-menu)로 배포. main 에 push 하면 1분 안에 반영된다.
+도메인은 Cloudflare 에서 구입, DNS 는 GitHub Pages A 레코드 4개 + www CNAME (모두 DNS only).
 
 ```
 index.html        메뉴 페이지 (QR 이 가리키는 곳)
